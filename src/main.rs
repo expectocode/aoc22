@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fs;
+use std::path::Path;
 use std::path::PathBuf;
 
 fn main() {
@@ -84,6 +85,17 @@ fn day7() {
         .collect();
     sizes.sort();
     dbg!(sizes.iter().sum::<i32>());
+
+    // part 2
+    let used_space = day7_dir_size(dirs.get(Path::new("/")).unwrap(), &dirs);
+    let space_needed = -70000000 + used_space + 30000000;
+    let mut sizes_above: Vec<_> = dirs
+        .values()
+        .map(|dir| day7_dir_size(dir, &dirs))
+        .filter(|&x| x >= space_needed)
+        .collect();
+    sizes_above.sort();
+    dbg!(sizes_above.iter().next().unwrap());
 }
 
 fn day7_dir_size(folder: &Folder, dirs: &HashMap<PathBuf, Folder>) -> i32 {
