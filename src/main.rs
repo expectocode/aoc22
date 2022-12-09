@@ -1,10 +1,12 @@
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fs;
+use std::ops::AddAssign;
 use std::path::Path;
 use std::path::PathBuf;
 
 fn main() {
-    day7();
+    day9();
 }
 
 #[allow(dead_code)]
@@ -105,6 +107,78 @@ fn day7_dir_size(folder: &Folder, dirs: &HashMap<PathBuf, Folder>) -> i32 {
     }
 
     size
+}
+
+#[derive(Debug, PartialEq, Copy, Clone, Hash, Eq)]
+struct Position {
+    x: i32,
+    y: i32,
+}
+
+impl AddAssign<(i32, i32)> for Position {
+    fn add_assign(self: &mut Position, (dx, dy): (i32, i32)) {
+        self.x += dx;
+        self.y += dy;
+    }
+}
+
+#[allow(dead_code)]
+fn day9() {
+    let input = read_file("day9input.txt");
+    let mut head_pos = Position { x: 0, y: 0 };
+    let mut tail_pos = Position { x: 0, y: 0 };
+    let mut tail_positions: HashSet<Position> = HashSet::new();
+    tail_positions.insert(tail_pos);
+
+    for line in input.trim().split('\n') {
+        let direction = line.chars().next().unwrap();
+        let count: i32 = line.split(' ').nth(1).unwrap().parse().unwrap();
+
+        for _ in 0..count {
+            match direction {
+                'R' => head_pos.x += 1,
+                'L' => head_pos.x -= 1,
+                'U' => head_pos.y += 1,
+                'D' => head_pos.y -= 1,
+                _ => panic!(),
+            }
+            if day9_string_touching(head_pos, tail_pos) {
+                continue;
+            }
+
+            let (dx, dy) = match day9_pos_diff(head_pos, tail_pos) {
+                (-1, 2) => (-1, 1),
+                (0, 2) => (0, 1),
+                (1, 2) => (1, 1),
+
+                (2, 1) => (1, 1),
+                (2, 0) => (1, 0),
+                (2, -1) => (1, -1),
+
+                (1, -2) => (1, -1),
+                (0, -2) => (0, -1),
+                (-1, -2) => (-1, -1),
+
+                (-2, -1) => (-1, -1),
+                (-2, 0) => (-1, 0),
+
+                (-2, 1) => (-1, 1),
+
+                _ => panic!(),
+            };
+            tail_pos += (dx, dy);
+            tail_positions.insert(tail_pos);
+        }
+    }
+    dbg!(tail_positions.len());
+}
+
+fn day9_string_touching(head: Position, tail: Position) -> bool {
+    (head.x - tail.x).abs() <= 1 && (head.y - tail.y).abs() <= 1
+}
+
+fn day9_pos_diff(a: Position, b: Position) -> (i32, i32) {
+    (a.x - b.x, a.y - b.y)
 }
 
 fn read_file(path: &str) -> String {
